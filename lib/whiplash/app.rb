@@ -57,7 +57,7 @@ module Whiplash
 
     def refresh_token!
       case ENV["WHIPLASH_CLIENT_SCOPE"]
-      when /app_(manage|read)/
+      when /user_(manage|read)/
         begin
           access_token = client.client_credentials.get_token(scope: ENV["WHIPLASH_CLIENT_SCOPE"])
           new_token = access_token.to_hash
