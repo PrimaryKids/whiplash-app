@@ -19,7 +19,7 @@ module Whiplash
           options[:method],
           endpoint,
           options[:params],
-          sanitize_headers(options[:headers])
+          #sanitize_headers(options[:headers])
         ]
 
         connection.send(*args)
