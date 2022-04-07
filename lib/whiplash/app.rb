@@ -29,7 +29,7 @@ module Whiplash
     end
 
     def self.whiplash_api_token
-      cache_store.read("whiplash_api_token")
+      Rails.cache.read("whiplash_api_token")
     end
 
     def client
