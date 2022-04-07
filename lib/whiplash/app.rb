@@ -68,8 +68,7 @@ module Whiplash
 
           access_token = client.auth_code.get_token(Rails.cache.read(WHIPLASH_AUTH_CODE_KEY), redirect_uri: 'https://primary-kids-temp-callback.free.beeceptor.com')
 
-          new_token = access_token.to_hash
-          cache_store.write('whiplash_api_token', new_token)
+
         rescue URI::InvalidURIError => e
           raise StandardError, "The provide URL (#{ENV['WHIPLASH_API_URL']}) is not valid"
         end
@@ -84,7 +83,8 @@ module Whiplash
         access_token = token.refresh!
       end
       Rails.cache.delete(WHIPLASH_AUTH_CODE_KEY)
-
+      new_token = access_token.to_hash
+      cache_store.write('whiplash_api_token', new_token)
       self.token = access_token
     end
 
