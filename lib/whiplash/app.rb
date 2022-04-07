@@ -60,7 +60,7 @@ module Whiplash
          if !token && Rails.cache.read(WHIPLASH_AUTH_CODE_KEY)
         begin
           #access_token = client.client_credentials.get_token(scope: ENV["WHIPLASH_CLIENT_SCOPE"])
-          auth_url = api.client.auth_code.authorize_url(redirect_uri: "https://primary-kids-temp-callback.free.beeceptor.com", response_type: :code, client_id: ENV["WHIPLASH_CLIENT_ID"], secret: ENV["WHIPLASH_CLIENT_ID"])
+          auth_url = client.auth_code.authorize_url(redirect_uri: "https://primary-kids-temp-callback.free.beeceptor.com", response_type: :code, client_id: ENV["WHIPLASH_CLIENT_ID"], secret: ENV["WHIPLASH_CLIENT_ID"])
           # res = Net::HTTP.get_response(URI(auth_url))
           # res['location']
 
