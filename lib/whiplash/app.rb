@@ -16,10 +16,12 @@ module Whiplash
     include Whiplash::App::FinderMethods
     extend Whiplash::App::Signing
 
+    WHIPLASH_AUTH_CODE_KEY = 'whiplash_auth_code'
+
     attr_accessor :customer_id, :shop_id, :token
 
     def initialize(token=nil, options={})
-      token ||= cache_store["whiplash_api_token"]
+      token ||= cache_store.read("whiplash_api_token")
       @token = format_token(token) unless token.nil?
       @customer_id = options[:customer_id]
       @shop_id = options[:shop_id]
@@ -27,9 +29,7 @@ module Whiplash
     end
 
     def self.whiplash_api_token
-      store = Moneta.new(:Redis, host: ENV["REDIS_HOST"], port: ENV["REDIS_PORT"], password: ENV["REDIS_PASSWORD"], expires: 7200)
-      cache_store = Moneta::Namespace.new store, Whiplash::App::Caching.namespace_value
-      cache_store["whiplash_api_token"]
+      cache_store.read("whiplash_api_token")
     end
 
     def client
@@ -56,12 +56,19 @@ module Whiplash
     end
 
     def refresh_token!
-      case ENV["WHIPLASH_CLIENT_SCOPE"]
-      when /user_(manage|read)/
+      raise StandardError, "rails cache value #{WHIPLASH_AUTH_CODE} not set" if token.nil? unless Rails.cache.read(WHIPLASH_AUTH_CODE_KEY)
+         if !token && Rails.cache.read(WHIPLASH_AUTH_CODE_KEY)
         begin
-          access_token = client.client_credentials.get_token(scope: ENV["WHIPLASH_CLIENT_SCOPE"])
+          #access_token = client.client_credentials.get_token(scope: ENV["WHIPLASH_CLIENT_SCOPE"])
+          auth_url = api.client.auth_code.authorize_url(redirect_uri: "https://primary-kids-temp-callback.free.beeceptor.com", response_type: :code, client_id: ENV["WHIPLASH_CLIENT_ID"], secret: ENV["WHIPLASH_CLIENT_ID"])
+          # res = Net::HTTP.get_response(URI(auth_url))
+          # res['location']
+
+          access_token = api.client.auth_code.get_token(Rails.cache.read(WHIPLASH_AUTH_CODE_KEY), redirect_uri: "https://primary-kids-temp-callback.free.beeceptor.com")
+
+
           new_token = access_token.to_hash
-          cache_store["whiplash_api_token"] = new_token
+          cache_store.write("whiplash_api_token", new_token)
         rescue URI::InvalidURIError => e
           raise StandardError, "The provide URL (#{ENV["WHIPLASH_API_URL"]}) is not valid"
         end
@@ -69,15 +76,16 @@ module Whiplash
         raise StandardError, "You must request an access token before you can refresh it" if token.nil?
         raise StandardError, "Token must either be a Hash or an OAuth2::AccessToken" unless token.is_a?(OAuth2::AccessToken)
         access_token = token.refresh!
+        Rails.cache.delete(WHIPLASH_AUTH_CODE_KEY)
       end
       self.token = access_token
     end
 
     def token_expired?
       return token.expired? unless token.nil?
-      return true unless cache_store.key?("whiplash_api_token")
-      return true if cache_store["whiplash_api_token"].nil?
-      return true if cache_store["whiplash_api_token"].empty?
+      return true unless cache_store.read("whiplash_api_token")
+      return true if cache_store.read("whiplash_api_token").nil?
+      return true if cache_store.read("whiplash_api_token").empty?
       false
     end
 
