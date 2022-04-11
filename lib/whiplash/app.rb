@@ -17,11 +17,12 @@ module Whiplash
     extend Whiplash::App::Signing
 
     WHIPLASH_AUTH_CODE_KEY = 'whiplash_auth_code'
+    WHIPLASH_API_KEY = 'whiplash_auth_token'
 
     attr_accessor :customer_id, :shop_id, :token
 
     def initialize(token = nil, options = {})
-      token ||= cache_store.read('whiplash_api_token')
+      token ||= cache_store.read(WHIPLASH_API_KEY)
       @token = format_token(token) unless token.nil?
       @customer_id = options[:customer_id]
       @shop_id = options[:shop_id]
@@ -29,7 +30,7 @@ module Whiplash
     end
 
     def self.whiplash_api_token
-      Rails.cache.read('whiplash_api_token')
+      Rails.cache.read(WHIPLASH_API_KEY)
     end
 
     def client
@@ -84,15 +85,15 @@ module Whiplash
       end
       Rails.cache.delete(WHIPLASH_AUTH_CODE_KEY)
       new_token = access_token.to_hash
-      cache_store.write('whiplash_api_token', new_token)
+      cache_store.write(WHIPLASH_API_KEY, new_token)
       self.token = access_token
     end
 
     def token_expired?
       return token.expired? unless token.nil?
-      return true unless cache_store.read('whiplash_api_token')
-      return true if cache_store.read('whiplash_api_token').nil?
-      return true if cache_store.read('whiplash_api_token').empty?
+      return true unless cache_store.read(WHIPLASH_API_KEY)
+      return true if cache_store.read(WHIPLASH_API_KEY).nil?
+      return true if cache_store.read(WHIPLASH_API_KEY).empty?
 
       false
     end
