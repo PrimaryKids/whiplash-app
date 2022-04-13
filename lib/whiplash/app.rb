@@ -58,7 +58,7 @@ module Whiplash
     def refresh_token!
       unless Rails.cache.read(WHIPLASH_AUTH_CODE_KEY) || !token.nil?
         raise StandardError,
-              "rails cache value #{WHIPLASH_AUTH_CODE} not set"
+              "rails cache value #{WHIPLASH_AUTH_CODE_KEY} not set"
       end
       if !token && Rails.cache.read(WHIPLASH_AUTH_CODE_KEY)
         begin
