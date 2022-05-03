@@ -27,6 +27,7 @@ module Whiplash
       @customer_id = options[:customer_id]
       @shop_id = options[:shop_id]
       @api_version = options[:api_version] || 2 # can be 2_1
+      @callback = options[:callback]
     end
 
     def self.whiplash_api_token
@@ -62,12 +63,7 @@ module Whiplash
       end
       if !token && Rails.cache.read(WHIPLASH_AUTH_CODE_KEY)
         begin
-          # access_token = client.client_credentials.get_token(scope: ENV["WHIPLASH_CLIENT_SCOPE"])
-          # auth_url = client.auth_code.authorize_url(redirect_uri: "https://primary-kids-temp-callback.free.beeceptor.com", response_type: :code, client_id: ENV["WHIPLASH_CLIENT_ID"], secret: ENV["WHIPLASH_CLIENT_ID"])
-          # res = Net::HTTP.get_response(URI(auth_url))
-          # res['location']
-
-          access_token = client.auth_code.get_token(Rails.cache.read(WHIPLASH_AUTH_CODE_KEY), redirect_uri: 'https://primary-kids-temp-callback.free.beeceptor.com')
+          access_token = client.auth_code.get_token(Rails.cache.read(WHIPLASH_AUTH_CODE_KEY), redirect_uri: @callback)
 
 
         rescue URI::InvalidURIError => e
